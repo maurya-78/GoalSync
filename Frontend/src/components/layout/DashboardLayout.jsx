@@ -1,33 +1,116 @@
+// ==========================================
+// FILE: src/layouts/DashboardLayout.jsx
+// ==========================================
+
 import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+
+import {
+
+  Outlet,
+  Navigate
+
+} from 'react-router-dom';
+
 import { useSelector } from 'react-redux';
-import Sidebar from './Sidebar';
-import Navbar from './Navbar';
+
+// ==========================================
+// COMPONENT IMPORTS
+// ==========================================
+
+import Sidebar from '../components/layout/Sidebar';
+
+import Navbar from '../components/layout/Navbar';
+
+// ==========================================
+// DASHBOARD LAYOUT
+// ==========================================
 
 const DashboardLayout = () => {
-  const { user } = useSelector((state) => state.auth);
 
-  // Protected Route Logic: Agar user logged in nahi hai, toh login par bhej do
-  if (!user) return <Navigate to="/login" replace />;
+  // ==========================================
+  // AUTH STATE
+  // ==========================================
+
+  const {
+
+    user
+
+  } = useSelector(
+
+    (state) => state.auth
+
+  );
+
+  // ==========================================
+  // PROTECTED ACCESS
+  // ==========================================
+
+  if (!user) {
+
+    return (
+
+      <Navigate
+
+        to="/login"
+
+        replace
+
+      />
+
+    );
+
+  }
+
+  // ==========================================
+  // MAIN LAYOUT
+  // ==========================================
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
-      {/* Fixed Sidebar */}
+
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 overflow-hidden">
+
+      {/* ==========================================
+          SIDEBAR
+      ========================================== */}
+
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Fixed Navbar */}
+      {/* ==========================================
+          MAIN CONTENT SECTION
+      ========================================== */}
+
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* ==========================================
+            TOP NAVBAR
+        ========================================== */}
+
         <Navbar />
 
-        {/* Dynamic Content Area */}
-        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        {/* ==========================================
+            PAGE CONTENT
+        ========================================== */}
+
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
+
           <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+
+            {/* ==========================================
+                ROUTE CONTENT
+            ========================================== */}
+
             <Outlet />
+
           </div>
+
         </main>
+
       </div>
+
     </div>
+
   );
+
 };
 
 export default DashboardLayout;

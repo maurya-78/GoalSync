@@ -1,189 +1,861 @@
-const GoalSheet = require('../models/GoalSheet');
 const Goal = require('../models/Goal');
+
+const GoalSheet = require('../models/GoalSheet');
+
 const AuditLog = require('../models/AuditLog');
+
 const Notification = require('../models/Notification');
 
+const goalService = require('../services/goalService');
+
 /**
- * 1. GET OR CREATE GOAL SHEET
- * Fetch existing sheet for the cycle or initialize a new operational grid.
+ * ==========================================
+ * 1. FETCH EMPLOYEE GOALS
+ * ==========================================
  */
-exports.getOrCreateGoalSheet = async (req, res, next) => {
+
+exports.fetchGoals = async (
+
+  req,
+  res,
+  next
+
+) => {
+
   try {
+
+    const { cycleId } = req.query;
+
+    const data = await goalService.getEmployeeGoals(
+
+      req.user._id,
+
+      cycleId
+
+    );
+
+    res.status(200).json({
+
+      success: true,
+
+      ...data
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+};
+
+/**
+ * ==========================================
+ * 2. GET OR CREATE GOAL SHEET
+ * ==========================================
+ */
+
+exports.getOrCreateGoalSheet = async (
+
+  req,
+  res,
+  next
+
+) => {
+
+  try {
+
     const employeeId = req.user._id;
+
     const { cycleId } = req.query;
 
     if (!cycleId) {
-      return res.status(400).json({ message: 'Active corporate cycle parameters must be specified.' });
+
+      return res.status(400).json({
+
+        success: false,
+
+        message: 'Cycle ID is required.'
+
+      });
+
     }
 
-    let sheet = await GoalSheet.findOne({ employee: employeeId, cycle: cycleId });
+    let sheet = await GoalSheet.findOne({
+
+      employee: employeeId,
+
+      cycle: cycleId
+
+    });
+
+    // ==========================================
+    // CREATE SHEET IF NOT EXISTS
+    // ==========================================
+
     if (!sheet) {
-      sheet = await GoalSheet.create({ employee: employeeId, cycle: cycleId, totalWeightage: 0 });
+
+      sheet = await GoalSheet.create({
+
+        employee: employeeId,
+
+        cycle: cycleId,
+
+        totalWeightage: 0,
+
+        status: 'Draft',
+
+        isLocked: false
+
+      });
+
     }
 
-    const goals = await Goal.find({ goalSheet: sheet._id });
-    res.json({ sheet, goals });
-  } catch (error) { next(error); }
+    // ==========================================
+    // FETCH GOALS
+    // ==========================================
+
+    const goals = await Goal.find({
+
+      goalSheet: sheet._id
+
+    });
+
+    res.status(200).json({
+
+      success: true,
+
+      sheet,
+
+      goals
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
 };
 
 /**
- * 2. ADD STRATEGIC GOAL
- * Adds a new target vector with weightage and count constraints.
+ * ==========================================
+ * 3. CREATE GOAL
+ * ==========================================
  */
-exports.addGoal = async (req, res, next) => {
+
+exports.addGoal = async (
+
+  req,
+  res,
+  next
+
+) => {
+
   try {
-    const { goalSheetId, title, description, weightage, target } = req.body;
-    const sheet = await GoalSheet.findById(goalSheetId);
 
-    if (!sheet) throw new Error('Goal sheet record missing.');
-    if (sheet.isLocked) throw new Error('Target matrix is explicitly locked.');
+    const {
 
-    const goalsCount = await Goal.countDocuments({ goalSheet: goalSheetId });
-    if (goalsCount >= 8) throw new Error('Business limitation: maximum 8 active strategic targets.');
+      goalSheetId,
 
-    if (sheet.totalWeightage + Number(weightage) > 100) {
-      throw new Error('Weightage aggregation violation: sum exceeds 100%.');
+      title,
+
+      description,
+
+      weightage,
+
+      target
+
+    } = req.body;
+
+    // ==========================================
+    // FIND SHEET
+    // ==========================================
+
+    const sheet = await GoalSheet.findById(
+
+      goalSheetId
+
+    );
+
+    if (!sheet) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: 'Goal sheet not found.'
+
+      });
+
     }
 
-    // Creating goal using merged model structure
-    const goal = await Goal.create({ 
-      goalSheet: goalSheetId, 
-      title, 
-      description, 
-      weightage, 
-      target 
+    // ==========================================
+    // SHEET LOCK CHECK
+    // ==========================================
+
+    if (sheet.isLocked) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message: 'Goal sheet is locked.'
+
+      });
+
+    }
+
+    // ==========================================
+    // MAX GOALS CHECK
+    // ==========================================
+
+    const goalsCount = await Goal.countDocuments({
+
+      goalSheet: goalSheetId
+
     });
+
+    if (goalsCount >= 8) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message: 'Maximum 8 goals allowed.'
+
+      });
+
+    }
+
+    // ==========================================
+    // WEIGHTAGE VALIDATION
+    // ==========================================
+
+    const existingGoals = await Goal.find({
+
+      goalSheet: goalSheetId
+
+    });
+
+    const totalWeightage = existingGoals.reduce(
+
+      (sum, goal) => sum + goal.weightage,
+
+      0
+
+    );
+
+    if (
+
+      totalWeightage +
+
+      Number(weightage) >
+
+      100
+
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+
+          'Total weightage cannot exceed 100%.'
+
+      });
+
+    }
+
+    // ==========================================
+    // CREATE GOAL
+    // ==========================================
+
+    const goal = await Goal.create({
+
+      user: req.user._id,
+
+      goalSheet: goalSheetId,
+
+      title,
+
+      description,
+
+      weightage,
+
+      target
+
+    });
+
+    // ==========================================
+    // UPDATE SHEET WEIGHTAGE
+    // ==========================================
 
     sheet.totalWeightage += Number(weightage);
+
     await sheet.save();
 
+    // ==========================================
+    // AUDIT LOG
+    // ==========================================
+
     await AuditLog.create({
-      performedBy: req.user._id, action: 'GOAL_CREATE', entityType: 'Goal', entityId: goal._id, newValue: goal
+
+      performedBy: req.user._id,
+
+      action: 'GOAL_CREATE',
+
+      entityType: 'Goal',
+
+      entityId: goal._id,
+
+      newValue: goal
+
     });
 
-    res.status(201).json(goal);
-  } catch (error) { next(error); }
+    res.status(201).json({
+
+      success: true,
+
+      data: goal
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
 };
 
 /**
- * 3. UPDATE GOAL (With Business Logic & Telemetry)
+ * ==========================================
+ * 4. UPDATE GOAL
+ * ==========================================
  */
-exports.updateGoal = async (req, res, next) => {
+
+exports.updateGoal = async (
+
+  req,
+  res,
+  next
+
+) => {
+
   try {
+
     const { id } = req.params;
-    const updateData = req.body; // Contains weightage, quarterly status/achievement, etc.
-    
+
     const goal = await Goal.findById(id);
-    if (!goal) throw new Error('Goal target entity lookup failure.');
-    
-    const sheet = await GoalSheet.findById(goal.goalSheet);
-    const originalGoalData = goal.toObject();
 
-    if (sheet.isLocked && req.user.role === 'Employee') {
-      throw new Error('Operational denial: target vectors are structurally locked.');
+    if (!goal) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: 'Goal not found.'
+
+      });
+
     }
 
-    // Role-based editing restrictions
-    if (req.user.role === 'Employee') {
-        const weightDelta = Number(updateData.weightage || goal.weightage) - goal.weightage;
-        if (sheet.totalWeightage + weightDelta > 100) throw new Error('Weightage ceiling constraint hit.');
-        
-        if (!goal.isShared) {
-            goal.title = updateData.title || goal.title;
-            goal.description = updateData.description || goal.description;
-            goal.target = updateData.target || goal.target;
-        }
-        goal.weightage = updateData.weightage || goal.weightage;
-    } else {
-        // Manager/Admin Overrides
-        if (updateData.weightage) {
-            const weightDelta = Number(updateData.weightage) - goal.weightage;
-            if (sheet.totalWeightage + weightDelta > 100) throw new Error('Weightage structural override limits blown.');
-            goal.weightage = updateData.weightage;
-        }
-        if (updateData.title && !goal.isShared) goal.title = updateData.title;
-        if (updateData.target) goal.target = updateData.target;
+    // ==========================================
+    // SECURITY CHECK
+    // ==========================================
+
+    if (
+
+      goal.user.toString() !==
+
+      req.user._id.toString() &&
+
+      req.user.role === 'Employee'
+
+    ) {
+
+      return res.status(403).json({
+
+        success: false,
+
+        message: 'Unauthorized access.'
+
+      });
+
     }
 
-    // SYNCING WITH MERGED MODEL QUARTERLY STRUCTURE
-    // Processing Q1 - Q4 Status and Achievement
-    ['q1', 'q2', 'q3', 'q4'].forEach(q => {
-        if (updateData[`${q}Status`]) goal[q].status = updateData[`${q}Status`];
-        if (updateData[`${q}Achievement`] !== undefined) goal[q].achievement = updateData[`${q}Achievement`];
-    });
+    const sheet = await GoalSheet.findById(
 
-    // Recalculate Overall Progress
-    goal.overallProgress = Math.round((goal.q1.achievement + goal.q2.achievement + goal.q3.achievement + goal.q4.achievement) / 4);
-    
+      goal.goalSheet
+
+    );
+
+    if (
+
+      sheet.isLocked &&
+
+      req.user.role === 'Employee'
+
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message: 'Goal sheet locked.'
+
+      });
+
+    }
+
+    const oldWeightage = goal.weightage;
+
+    // ==========================================
+    // BASIC FIELD UPDATES
+    // ==========================================
+
+    goal.title =
+      req.body.title || goal.title;
+
+    goal.description =
+      req.body.description || goal.description;
+
+    goal.target =
+      req.body.target || goal.target;
+
+    goal.weightage =
+      req.body.weightage || goal.weightage;
+
+    // ==========================================
+    // QUARTERLY UPDATES
+    // ==========================================
+
+    ['q1', 'q2', 'q3', 'q4']
+
+      .forEach((quarter) => {
+
+        if (req.body[quarter]) {
+
+          goal[quarter].status =
+
+            req.body[quarter].status ||
+
+            goal[quarter].status;
+
+          goal[quarter].achievement =
+
+            req.body[quarter].achievement ??
+
+            goal[quarter].achievement;
+
+        }
+
+      });
+
+    // ==========================================
+    // OVERALL PROGRESS
+    // ==========================================
+
+    goal.overallProgress = Math.round(
+
+      (
+
+        goal.q1.achievement +
+
+        goal.q2.achievement +
+
+        goal.q3.achievement +
+
+        goal.q4.achievement
+
+      ) / 4
+
+    );
+
     await goal.save();
 
-    // Sync Sheet Total Weightage
-    const allGoals = await Goal.find({ goalSheet: sheet._id });
-    sheet.totalWeightage = allGoals.reduce((sum, g) => sum + g.weightage, 0);
-    await sheet.save();
+    // ==========================================
+    // UPDATE SHEET WEIGHTAGE
+    // ==========================================
 
-    await AuditLog.create({
-      performedBy: req.user._id, action: 'GOAL_UPDATE', entityType: 'Goal', entityId: goal._id, previousValue: originalGoalData, newValue: goal
-    });
+    sheet.totalWeightage =
 
-    res.json(goal);
-  } catch (error) { next(error); }
-};
+      sheet.totalWeightage -
 
-/**
- * 4. DELETE GOAL
- */
-exports.deleteGoal = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const goal = await Goal.findById(id);
-    if (!goal) throw new Error('Target matrix identity reference breakdown.');
-    
-    const sheet = await GoalSheet.findById(goal.goalSheet);
-    if (sheet.isLocked) throw new Error('Destruction request locked out.');
+      oldWeightage +
 
-    sheet.totalWeightage -= goal.weightage;
-    await sheet.save();
-    
-    await Goal.findByIdAndDelete(id);
+      goal.weightage;
 
-    await AuditLog.create({
-      performedBy: req.user._id, action: 'GOAL_DELETE', entityType: 'Goal', entityId: id, previousValue: goal
-    });
+    if (sheet.totalWeightage > 100) {
 
-    res.json({ message: 'Target node purge complete.' });
-  } catch (error) { next(error); }
-};
+      return res.status(400).json({
 
-/**
- * 5. SUBMIT GOAL SHEET (Validation & Notification)
- */
-exports.submitGoalSheet = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const sheet = await GoalSheet.findById(id).populate('employee');
-    
-    if (!sheet) throw new Error('Target matrix catalog configuration missing.');
-    if (sheet.totalWeightage !== 100) {
-      throw new Error(`Strategic validation barrier: Cumulative metric weightage must equal exactly 100%. Current total: ${sheet.totalWeightage}%`);
+        success: false,
+
+        message:
+
+          'Weightage exceeds 100%.'
+
+      });
+
     }
 
-    const goals = await Goal.find({ goalSheet: id });
-    if (goals.some(g => g.weightage < 10)) {
-      throw new Error('Policy infraction: Individual target metrics cannot drop below 10% structural allocation.');
+    await sheet.save();
+
+    // ==========================================
+    // AUDIT LOG
+    // ==========================================
+
+    await AuditLog.create({
+
+      performedBy: req.user._id,
+
+      action: 'GOAL_UPDATE',
+
+      entityType: 'Goal',
+
+      entityId: goal._id,
+
+      newValue: goal
+
+    });
+
+    res.status(200).json({
+
+      success: true,
+
+      data: goal
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+};
+
+/**
+ * ==========================================
+ * 5. UPDATE QUARTERLY PROGRESS
+ * ==========================================
+ */
+
+exports.updateQuarterlyProgress = async (
+
+  req,
+  res,
+  next
+
+) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const goal = await Goal.findById(id);
+
+    if (!goal) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: 'Goal not found.'
+
+      });
+
+    }
+
+    // ==========================================
+    // SECURITY CHECK
+    // ==========================================
+
+    if (
+
+      goal.user.toString() !==
+
+      req.user._id.toString()
+
+    ) {
+
+      return res.status(403).json({
+
+        success: false,
+
+        message: 'Unauthorized access.'
+
+      });
+
+    }
+
+    const updates = req.body;
+
+    // ==========================================
+    // QUARTER UPDATE
+    // ==========================================
+
+    ['q1', 'q2', 'q3', 'q4']
+
+      .forEach((quarter) => {
+
+        if (updates[quarter]) {
+
+          goal[quarter].status =
+
+            updates[quarter].status ||
+
+            goal[quarter].status;
+
+          goal[quarter].achievement =
+
+            updates[quarter].achievement ??
+
+            goal[quarter].achievement;
+
+        }
+
+      });
+
+    // ==========================================
+    // OVERALL PROGRESS
+    // ==========================================
+
+    goal.overallProgress = Math.round(
+
+      (
+
+        goal.q1.achievement +
+
+        goal.q2.achievement +
+
+        goal.q3.achievement +
+
+        goal.q4.achievement
+
+      ) / 4
+
+    );
+
+    await goal.save();
+
+    // ==========================================
+    // AUDIT LOG
+    // ==========================================
+
+    await AuditLog.create({
+
+      performedBy: req.user._id,
+
+      action: 'GOAL_PROGRESS_UPDATE',
+
+      entityType: 'Goal',
+
+      entityId: goal._id,
+
+      newValue: goal
+
+    });
+
+    res.status(200).json({
+
+      success: true,
+
+      data: goal
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+};
+
+/**
+ * ==========================================
+ * 6. DELETE GOAL
+ * ==========================================
+ */
+
+exports.deleteGoal = async (
+
+  req,
+  res,
+  next
+
+) => {
+
+  try {
+
+    const goal = await Goal.findOne({
+
+      _id: req.params.id,
+
+      user: req.user._id
+
+    });
+
+    if (!goal) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: 'Goal not found.'
+
+      });
+
+    }
+
+    const sheet = await GoalSheet.findById(
+
+      goal.goalSheet
+
+    );
+
+    if (sheet.isLocked) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message: 'Goal sheet locked.'
+
+      });
+
+    }
+
+    sheet.totalWeightage -= goal.weightage;
+
+    await sheet.save();
+
+    await goal.deleteOne();
+
+    // ==========================================
+    // AUDIT LOG
+    // ==========================================
+
+    await AuditLog.create({
+
+      performedBy: req.user._id,
+
+      action: 'GOAL_DELETE',
+
+      entityType: 'Goal',
+
+      entityId: goal._id
+
+    });
+
+    res.status(200).json({
+
+      success: true,
+
+      message: 'Goal deleted successfully.'
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+};
+
+/**
+ * ==========================================
+ * 7. SUBMIT GOAL SHEET
+ * ==========================================
+ */
+
+exports.submitGoalSheet = async (
+
+  req,
+  res,
+  next
+
+) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const sheet = await GoalSheet.findById(id)
+
+      .populate('employee');
+
+    if (!sheet) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: 'Goal sheet not found.'
+
+      });
+
+    }
+
+    // ==========================================
+    // FINAL VALIDATION
+    // ==========================================
+
+    if (sheet.totalWeightage !== 100) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          'Total weightage must equal 100%.'
+
+      });
+
     }
 
     sheet.status = 'Pending Approval';
+
     await sheet.save();
 
+    // ==========================================
+    // MANAGER NOTIFICATION
+    // ==========================================
+
     if (sheet.employee.manager) {
+
       await Notification.create({
+
         recipient: sheet.employee.manager,
-        title: 'Goal Matrix Pending Review',
-        message: `${sheet.employee.name} has submitted a core corporate strategy matrix for review alignment.`
+
+        title: 'Goal Sheet Pending',
+
+        message:
+          `${sheet.employee.name} submitted goals for approval.`
+
       });
+
     }
 
-    res.json({ message: 'Strategic operational targets staged for managerial validation.', sheet });
-  } catch (error) { next(error); }
+    res.status(200).json({
+
+      success: true,
+
+      sheet
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
 };

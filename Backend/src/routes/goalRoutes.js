@@ -1,40 +1,150 @@
+// ==========================================
+// FILE: src/routes/goalRoutes.js
+// ==========================================
+
 const express = require('express');
+
 const router = express.Router();
 
-// Controllers import
-const { 
-  getOrCreateGoalSheet, 
-  addGoal, 
-  updateGoal, 
-  deleteGoal, 
-  submitGoalSheet 
+// ==========================================
+// CONTROLLERS
+// ==========================================
+
+const {
+
+  fetchGoals,
+  getOrCreateGoalSheet,
+  addGoal,
+  updateGoal,
+  deleteGoal,
+  updateQuarterlyProgress,
+  submitGoalSheet
+
 } = require('../controllers/goalController');
 
-// Middleware import
-const { protect } = require('../middleware/authMiddleware');
+// ==========================================
+// MIDDLEWARES
+// ==========================================
+
+const {
+
+  protect
+
+} = require('../middleware/authMiddleware');
+
+const {
+
+  validateGoal
+
+} = require('../middleware/goalValidation');
+
+// ==========================================
+// ALL ROUTES ARE PROTECTED
+// ==========================================
+
+router.use(protect);
+
+// ==========================================
+// GOALSHEET ROUTES
+// ==========================================
 
 /**
- * GOAL MANAGEMENT SYSTEM ROUTES
- * -----------------------------
- * All routes are guarded by 'protect' middleware.
+ * @route   GET /api/v1/goals
+ * @desc    Fetch all employee goals
+ * @access  Private
  */
+router.get(
 
-// 1. GoalSheet Operations
-// GET /api/v1/goals/sheet -> Fetch or initialize the user's current sheet
-router.get('/sheet', protect, getOrCreateGoalSheet);
+  '/',
 
-// PUT /api/v1/goals/sheet/submit/:id -> Final validation & lock the sheet
-// (Using PUT because we are updating the full state of the sheet to 'Submitted')
-router.put('/sheet/submit/:id', protect, submitGoalSheet);
+  fetchGoals
 
-// 2. Individual Goal Operations
-// POST /api/v1/goals -> Create a new strategic target inside a sheet
-router.post('/', protect, addGoal);
+);
 
-// ID Specific Operations (Update & Delete)
-router
-  .route('/:id')
-  .put(protect, updateGoal)    // Update metrics/achievement (Merged choice)
-  .delete(protect, deleteGoal); // Purge target (checks for sheet lock status)
+/**
+ * @route   GET /api/v1/goals/sheet
+ * @desc    Get or create employee goal sheet
+ * @access  Private
+ */
+router.get(
+
+  '/sheet',
+
+  getOrCreateGoalSheet
+
+);
+
+/**
+ * @route   PUT /api/v1/goals/sheet/submit/:id
+ * @desc    Submit goal sheet for approval
+ * @access  Private
+ */
+router.put(
+
+  '/sheet/submit/:id',
+
+  submitGoalSheet
+
+);
+
+// ==========================================
+// GOAL CRUD ROUTES
+// ==========================================
+
+/**
+ * @route   POST /api/v1/goals
+ * @desc    Create new goal
+ * @access  Private
+ */
+router.post(
+
+  '/',
+
+  validateGoal,
+
+  addGoal
+
+);
+
+/**
+ * @route   PUT /api/v1/goals/:id
+ * @desc    Update complete goal
+ * @access  Private
+ */
+router.put(
+
+  '/:id',
+
+  validateGoal,
+
+  updateGoal
+
+);
+
+/**
+ * @route   PATCH /api/v1/goals/:id/progress
+ * @desc    Update quarterly progress only
+ * @access  Private
+ */
+router.patch(
+
+  '/:id/progress',
+
+  updateQuarterlyProgress
+
+);
+
+/**
+ * @route   DELETE /api/v1/goals/:id
+ * @desc    Delete goal
+ * @access  Private
+ */
+router.delete(
+
+  '/:id',
+
+  deleteGoal
+
+);
 
 module.exports = router;
