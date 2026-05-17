@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
+import api from '../../services/api';
 import { 
   ShieldAlert, Activity, Target, Trophy, 
   Users, Layers, ArrowUpRight, Zap, Clock, BrainCircuit 
@@ -27,10 +28,21 @@ export default function UnifiedDashboard() {
   const { items: goals, totalWeightage, status } = useSelector((state) => state.goals);
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    // Current operational cycle fetch
-    dispatch(fetchGoals('current-cycle-2026'));
-  }, [dispatch]);
+ useEffect(() => {
+  const loadCycles = async () => {
+    try {
+      const response = await api.get('/cycles');
+      const fetchedCycles = response.data?.cycles || [];
+      if (fetchedCycles.length > 0) {
+        const activeCycleId = fetchedCycles[0]._id;
+        dispatch(fetchGoals(activeCycleId));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  loadCycles();
+}, [dispatch]);
 
   // --- ANALYTICS ENGINE ---
   const totalGoals = goals.length;

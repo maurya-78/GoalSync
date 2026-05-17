@@ -41,31 +41,19 @@ export default function GoalCard({ goal }) {
   ) => {
 
     try {
-
       setLoadingQuarter(quarter);
-
       await dispatch(
-
         updateGoalAction({
-
           id: goal._id,
-
           data: {
-
             [quarter]: {
-
               achievement: Number(
                 achievement
               ),
-
               status
-
             }
-
           }
-
         })
-
       ).unwrap();
 
       toast.success(

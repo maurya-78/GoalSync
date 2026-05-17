@@ -80,7 +80,7 @@ const initialState = {
     overallProgress: 0
   },
   status: 'idle',
-  error: null,
+  error: "",
   isLocked: false
 };
 

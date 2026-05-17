@@ -18,8 +18,21 @@ export default function ManageGoals() {
   });
 
   useEffect(() => {
-    dispatch(fetchGoals('current-cycle-2026'));
-  }, [dispatch]);
+  const loadCycles = async () => {
+    try {
+      const response = await api.get('/cycles');
+      const fetchedCycles = response.data?.cycles || [];
+      if (fetchedCycles.length > 0) {
+        const activeCycleId = fetchedCycles[0]._id;
+        dispatch(fetchGoals(activeCycleId));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  loadCycles();
+}, [dispatch]);
+
 
   // Handle Add Goal
   const handleAddGoal = async (e) => {

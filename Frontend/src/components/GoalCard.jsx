@@ -9,7 +9,6 @@ import {deleteGoalAction} from '../redux/slices/goalSlice';
 // ==========================================
 
 export default function GoalCard({
-
   goal,
   onEdit
 

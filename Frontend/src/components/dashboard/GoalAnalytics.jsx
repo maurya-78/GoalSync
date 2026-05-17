@@ -239,7 +239,6 @@ export default function GoalAnalytics({
                 data={completionData}
 
                 dataKey="value"
-
                 outerRadius={110}
 
                 label
