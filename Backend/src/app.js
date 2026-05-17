@@ -10,8 +10,9 @@ const errorHandler = require('./middleware/errorHandler');
 // Route Imports
 const authRoutes = require('./routes/authRoutes');
 const goalRoutes = require('./routes/goalRoutes');
-const managementRoutes = require('./routes/managementRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+const cycleRoutes = require('./routes/cycleRoutes');
+// const managementRoutes = require('./routes/managementRoutes');
+// const adminRoutes = require('./routes/adminRoutes');
 
 // Initialize Express
 const app = express();
@@ -49,7 +50,7 @@ app.use(cookieParser());
 app.get('/', (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'GoalSync (AlignX) Backend API Running Successfully'
+        message: 'GoalSync Backend API Running Successfully'
     });
 });
 
@@ -68,8 +69,9 @@ app.get('/health', (req, res) => {
 // Versioning ensures future updates don't break the current frontend
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/goals', goalRoutes);
-app.use('/api/v1/management', managementRoutes);
-app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/cycles', cycleRoutes);
+// app.use('/api/v1/management', managementRoutes);
+// app.use('/api/v1/admin', adminRoutes);
 
 // ==========================================
 // ERROR HANDLING

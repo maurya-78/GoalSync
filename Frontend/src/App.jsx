@@ -11,7 +11,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register'; // Added for completeness
 
 // Feature Pages
-//import UnifiedDashboard from './pages/dashboard/UnifiedDashboard';
+import UnifiedDashboard from './pages/dashboard/UnifiedDashboard';
 import StrategicGoals from './pages/employee/StrategicGoals';
 import TeamPortfolio from './pages/manager/TeamPortfolio';
 import SharedGoalDistribution from './pages/manager/SharedGoalDistribution';
@@ -58,7 +58,7 @@ export default function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           
           {/* Common for All Roles */}
-          {/* <Route path="dashboard" element={<UnifiedDashboard />} /> */}
+          <Route path="dashboard" element={<UnifiedDashboard />} />
 
           {/* Employee Focus */}
           <Route path="goals" element={<StrategicGoals />} />

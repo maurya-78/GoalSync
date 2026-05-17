@@ -2,61 +2,108 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
-        required: [true, 'Please provide a name'], 
-        trim: true 
+
+    name: {
+        type: String,
+        required: [true, 'Please provide a name'],
+        trim: true
     },
-    email: { 
-        type: String, 
-        required: [true, 'Please provide an email'], 
-        unique: true, 
-        lowercase: true, 
+
+    email: {
+        type: String,
+        required: [true, 'Please provide an email'],
+        unique: true,
+        lowercase: true,
         trim: true,
-        match: [/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, 'Please provide a valid email']
+        match: [
+            /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+            'Please provide a valid email'
+        ]
     },
-    password: { 
-        type: String, 
-        required: [true, 'Please provide a password'], 
+
+    password: {
+        type: String,
+        required: [true, 'Please provide a password'],
         minlength: 6,
-        select: false // Default query mein password hide rahega security ke liye
+        select: false
     },
-    role: { 
-        type: String, 
-        enum: ['Admin', 'Manager', 'Employee'], 
-        default: 'Employee' 
+
+    role: {
+        type: String,
+        enum: ['Admin', 'Manager', 'Employee'],
+        default: 'Employee'
     },
-    department: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Department' 
+
+    department: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department'
     },
-    team: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Team' 
+
+    team: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Team'
     },
-    manager: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User' // Self-referencing (Employee ka manager kaun hai)
+
+    manager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
-    isActive: { 
-        type: Boolean, 
-        default: true 
+
+    isActive: {
+        type: Boolean,
+        default: true
     }
-}, { 
-    timestamps: true // createdAt aur updatedAt automatically handle karega
+
+}, {
+
+    timestamps: true
+
 });
 
-// PASSWORD ENCRYPTION: Save hone se pehle password hash karega
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+// ==========================================
+// PASSWORD HASHING
+// ==========================================
+
+userSchema.pre('save', async function () {
+
+    // Agar password modified nahi hua
+    if (!this.isModified('password')) {
+
+        return;
+
+    }
+
+    // Salt Generate
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
+
+    // Password Hash
+    this.password = await bcrypt.hash(
+        this.password,
+        salt
+    );
+
 });
 
-// PASSWORD MATCHING: Login ke waqt check karne ke liye helper method
-userSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+// ==========================================
+// PASSWORD MATCHING
+// ==========================================
+
+userSchema.methods.matchPassword = async function (
+    enteredPassword
+) {
+
+    return await bcrypt.compare(
+        enteredPassword,
+        this.password
+    );
+
 };
 
-module.exports = mongoose.model('User', userSchema);
+// ==========================================
+// EXPORT MODEL
+// ==========================================
+
+module.exports = mongoose.model(
+    'User',
+    userSchema
+);

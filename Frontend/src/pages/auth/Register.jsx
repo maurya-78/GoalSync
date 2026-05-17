@@ -7,7 +7,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { UserPlus, Loader2, Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
-import axios from '../../api/axios';
+import api from '../../services/api';
 
 // 1. Validation Schema using Zod
 const registerSchema = zod.object({
@@ -28,7 +28,8 @@ export default function Register() {
 
   const onSubmit = async (data) => {
     try {
-      await axios.post('/auth/register', data);
+      console.log(data);
+      await api.post('/auth/register', data);
       toast.success('Identity Created. Please login to authorize.');
       navigate('/login');
     } catch (error) {
