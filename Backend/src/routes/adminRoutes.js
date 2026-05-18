@@ -1,12 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { getSystemAuditLogs, forceUnlockGoalSheet, getGlobalEnterpriseReport, createGoalCycle, getGoalCycles } = require('../controllers/adminController');
+const {
+  getAllUsers, updateUser, deleteUser,
+  getCycles, createCycle, updateCycle, deleteCycle,
+  getDepartments, createDepartment, updateDepartment, deleteDepartment,
+  getTeams, createTeam, updateTeam, deleteTeam,
+  getSystemAnalytics,
+} = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.get('/audit-logs', protect, authorize('Admin'), getSystemAuditLogs);
-router.put('/unlock/:id', protect, authorize('Admin'), forceUnlockGoalSheet);
-router.get('/metrics-report', protect, authorize('Admin'), getGlobalEnterpriseReport);
-router.post('/cycles', protect, authorize('Admin'), createGoalCycle);
-router.get('/cycles', protect, getGoalCycles);
+router.use(protect, authorize('admin'));
+
+router.get('/analytics', getSystemAnalytics);
+router.route('/users').get(getAllUsers);
+router.route('/users/:id').put(updateUser).delete(deleteUser);
+router.route('/cycles').get(getCycles).post(createCycle);
+router.route('/cycles/:id').put(updateCycle).delete(deleteCycle);
+router.route('/departments').get(getDepartments).post(createDepartment);
+router.route('/departments/:id').put(updateDepartment).delete(deleteDepartment);
+router.route('/teams').get(getTeams).post(createTeam);
+router.route('/teams/:id').put(updateTeam).delete(deleteTeam);
 
 module.exports = router;

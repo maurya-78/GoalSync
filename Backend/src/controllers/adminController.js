@@ -1,53 +1,145 @@
 const User = require('../models/User');
-const GoalSheet = require('../models/GoalSheet');
-const AuditLog = require('../models/AuditLog');
-const GoalCycle = require('../models/GoalCycle');
+const Goal = require('../models/Goal');
+const { Cycle, Team, Department } = require('../models/index');
 
-exports.getSystemAuditLogs = async (req, res, next) => {
+// ─── User Management ────────────────────────────────────────────────────────
+exports.getAllUsers = async (req, res, next) => {
   try {
-    const logs = await AuditLog.find().populate('performedBy').sort({ createdAt: -1 }).limit(100);
-    res.json(logs);
-  } catch (error) { next(error); }
+    const users = await User.find()
+      .populate('department', 'name')
+      .populate('team', 'name')
+      .populate('manager', 'name email')
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: users.length, users });
+  } catch (err) { next(err); }
 };
 
-exports.forceUnlockGoalSheet = async (req, res, next) => {
+exports.updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const sheet = await GoalSheet.findById(id);
-    if (!sheet) { res.status(404); throw new Error('Target document signature payload error.'); }
-    
-    sheet.isLocked = false;
-    sheet.status = 'Draft';
-    await sheet.save();
+    const allowedFields = ['name', 'role', 'isActive', 'department', 'team', 'manager', 'designation', 'phone'];
+    const updates = {};
+    allowedFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.status(200).json({ success: true, user });
+  } catch (err) { next(err); }
+};
 
-    await AuditLog.create({
-      performedBy: req.user._id, action: 'ADMIN_FORCE_UNLOCK', entityType: 'GoalSheet', entityId: id, newValue: sheet
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (user.role === 'admin') return res.status(403).json({ success: false, message: 'Cannot delete admin' });
+    await user.deleteOne();
+    res.status(200).json({ success: true, message: 'User deleted' });
+  } catch (err) { next(err); }
+};
+
+// ─── Cycle Management ───────────────────────────────────────────────────────
+exports.getCycles = async (req, res, next) => {
+  try {
+    const cycles = await Cycle.find().sort({ year: -1 });
+    res.status(200).json({ success: true, cycles });
+  } catch (err) { next(err); }
+};
+
+exports.createCycle = async (req, res, next) => {
+  try {
+    req.body.createdBy = req.user.id;
+    const cycle = await Cycle.create(req.body);
+    res.status(201).json({ success: true, cycle });
+  } catch (err) { next(err); }
+};
+
+exports.updateCycle = async (req, res, next) => {
+  try {
+    if (req.body.isActive) await Cycle.updateMany({}, { isActive: false });
+    const cycle = await Cycle.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json({ success: true, cycle });
+  } catch (err) { next(err); }
+};
+
+exports.deleteCycle = async (req, res, next) => {
+  try {
+    await Cycle.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Cycle deleted' });
+  } catch (err) { next(err); }
+};
+
+// ─── Department Management ──────────────────────────────────────────────────
+exports.getDepartments = async (req, res, next) => {
+  try {
+    const departments = await Department.find().populate('head', 'name email');
+    res.status(200).json({ success: true, departments });
+  } catch (err) { next(err); }
+};
+
+exports.createDepartment = async (req, res, next) => {
+  try {
+    const dept = await Department.create(req.body);
+    res.status(201).json({ success: true, department: dept });
+  } catch (err) { next(err); }
+};
+
+exports.updateDepartment = async (req, res, next) => {
+  try {
+    const dept = await Department.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json({ success: true, department: dept });
+  } catch (err) { next(err); }
+};
+
+exports.deleteDepartment = async (req, res, next) => {
+  try {
+    await Department.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Department deleted' });
+  } catch (err) { next(err); }
+};
+
+// ─── Team Management ────────────────────────────────────────────────────────
+exports.getTeams = async (req, res, next) => {
+  try {
+    const teams = await Team.find()
+      .populate('manager', 'name email avatar')
+      .populate('members', 'name email avatar')
+      .populate('department', 'name');
+    res.status(200).json({ success: true, teams });
+  } catch (err) { next(err); }
+};
+
+exports.createTeam = async (req, res, next) => {
+  try {
+    const team = await Team.create(req.body);
+    res.status(201).json({ success: true, team });
+  } catch (err) { next(err); }
+};
+
+exports.updateTeam = async (req, res, next) => {
+  try {
+    const team = await Team.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json({ success: true, team });
+  } catch (err) { next(err); }
+};
+
+exports.deleteTeam = async (req, res, next) => {
+  try {
+    await Team.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Team deleted' });
+  } catch (err) { next(err); }
+};
+
+// ─── System Analytics ───────────────────────────────────────────────────────
+exports.getSystemAnalytics = async (req, res, next) => {
+  try {
+    const [totalUsers, totalGoals, activeGoals, usersByRole, goalsByStatus] = await Promise.all([
+      User.countDocuments(),
+      Goal.countDocuments(),
+      Goal.countDocuments({ status: 'in_progress' }),
+      User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]),
+      Goal.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    ]);
+    res.status(200).json({
+      success: true,
+      analytics: { totalUsers, totalGoals, activeGoals, usersByRole, goalsByStatus },
     });
-
-    res.json({ message: 'Administrative explicit lock override sequence authorized.', sheet });
-  } catch (error) { next(error); }
-};
-
-exports.getGlobalEnterpriseReport = async (req, res, next) => {
-  try {
-    const criticalSheetsCount = await GoalSheet.countDocuments({ status: 'Approved' });
-    const outstandingSheetsCount = await GoalSheet.countDocuments({ status: 'Pending Approval' });
-    const draftSheetsCount = await GoalSheet.countDocuments({ status: 'Draft' });
-    res.json({ criticalSheetsCount, outstandingSheetsCount, draftSheetsCount });
-  } catch (error) { next(error); }
-};
-
-exports.createGoalCycle = async (req, res, next) => {
-  try {
-    const { name, startDate, endDate } = req.body;
-    const cycle = await GoalCycle.create({ name, startDate, endDate });
-    res.status(201).json(cycle);
-  } catch (error) { next(error); }
-};
-
-exports.getGoalCycles = async (req, res, next) => {
-  try {
-    const cycles = await GoalCycle.find();
-    res.json(cycles);
-  } catch (error) { next(error); }
+  } catch (err) { next(err); }
 };

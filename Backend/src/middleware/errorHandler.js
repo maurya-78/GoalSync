@@ -1,201 +1,40 @@
-/**
- * ==========================================
- * GLOBAL ENTERPRISE ERROR HANDLER
- * ==========================================
- * Handles:
- * - Validation errors
- * - MongoDB errors
- * - JWT errors
- * - Production-safe responses
- */
+const errorHandler = (err, req, res, next) => {
+  let error = { ...err };
+  error.message = err.message;
 
-// ==========================================
-// MAIN ERROR HANDLER
-// ==========================================
-
-const errorHandler = (
-
-  err,
-  req,
-  res,
-  next
-
-) => {
-
-  // ==========================================
-  // DEFAULTS
-  // ==========================================
-
-  let statusCode =
-
-    res.statusCode === 200
-
-      ? 500
-
-      : res.statusCode;
-
-  let message = err.message;
-
-  // ==========================================
-  // DEVELOPMENT LOGGING
-  // ==========================================
-
-  if (
-
-    process.env.NODE_ENV !== 'production'
-
-  ) {
-
-    console.error('\n❌ ERROR STACK:\n');
-
-    console.error(err);
-
-  }
-
-  // ==========================================
-  // MONGOOSE: INVALID OBJECT ID
-  // ==========================================
-
+  // Mongoose bad ObjectId
   if (err.name === 'CastError') {
-
-    statusCode = 404;
-
-    message =
-      'Requested operational record not found.';
-
+    error.message = 'Resource not found';
+    return res.status(404).json({ success: false, message: error.message });
   }
 
-  // ==========================================
-  // MONGOOSE: DUPLICATE KEY
-  // ==========================================
-
+  // Mongoose duplicate key
   if (err.code === 11000) {
-
-    statusCode = 400;
-
-    const field =
-
-      Object.keys(err.keyValue)[0];
-
-    message =
-      `${field} already exists in the system.`;
-
+    const field = Object.keys(err.keyValue)[0];
+    error.message = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
+    return res.status(400).json({ success: false, message: error.message });
   }
 
-  // ==========================================
-  // MONGOOSE: VALIDATION ERROR
-  // ==========================================
-
-  if (
-
-    err.name === 'ValidationError'
-
-  ) {
-
-    statusCode = 400;
-
-    message = Object.values(
-
-      err.errors
-
-    )
-
-      .map(val => val.message)
-
-      .join(', ');
-
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map((e) => e.message);
+    error.message = messages.join(', ');
+    return res.status(400).json({ success: false, message: error.message });
   }
 
-  // ==========================================
-  // JWT: INVALID TOKEN
-  // ==========================================
-
-  if (
-
-    err.name === 'JsonWebTokenError'
-
-  ) {
-
-    statusCode = 401;
-
-    message =
-      'Authentication token integrity failed.';
-
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({ success: false, message: 'Invalid token' });
   }
 
-  // ==========================================
-  // JWT: EXPIRED TOKEN
-  // ==========================================
-
-  if (
-
-    err.name === 'TokenExpiredError'
-
-  ) {
-
-    statusCode = 401;
-
-    message =
-      'Authentication session expired.';
-
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({ success: false, message: 'Token expired' });
   }
 
-  // ==========================================
-  // RESPONSE
-  // ==========================================
-
-  res.status(statusCode).json({
-
+  res.status(err.statusCode || 500).json({
     success: false,
-
-    statusCode,
-
-    message,
-
-    stack:
-
-      process.env.NODE_ENV === 'production'
-
-        ? null
-
-        : err.stack,
-
+    message: error.message || 'Internal Server Error',
   });
-
 };
 
-// ==========================================
-// 404 NOT FOUND HANDLER
-// ==========================================
-
-const notFound = (
-
-  req,
-  res,
-  next
-
-) => {
-
-  const error = new Error(
-
-    `Route not found: ${req.originalUrl}`
-
-  );
-
-  res.status(404);
-
-  next(error);
-
-};
-
-// ==========================================
-// EXPORTS
-// ==========================================
-
-module.exports = {
-
-  errorHandler,
-
-  notFound
-
-};
+module.exports = errorHandler;
