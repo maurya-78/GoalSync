@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 const UserSchema = new mongoose.Schema(
   {
@@ -73,6 +74,15 @@ UserSchema.methods.getResetPasswordToken = function () {
     .digest('hex');
   this.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
   return resetToken;
+};
+
+// JWT token generate karo
+UserSchema.methods.getSignedJwtToken = function () {
+  return jwt.sign(
+    { id: this._id, role: this.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '30d' }
+  );
 };
 
 module.exports = mongoose.model('User', UserSchema);
