@@ -1,10 +1,5 @@
 import axios from 'axios';
-import API from '../services/authService';
 
-const fetchMyGoals = async () => {
-   const response = await API.get('/goals/sheet');
-   return response.data;
-}
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
