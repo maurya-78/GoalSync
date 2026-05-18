@@ -1,24 +1,78 @@
-const express = require('express');
-const router = express.Router();
-const {
-  getAllUsers, updateUser, deleteUser,
-  getCycles, createCycle, updateCycle, deleteCycle,
-  getDepartments, createDepartment, updateDepartment, deleteDepartment,
-  getTeams, createTeam, updateTeam, deleteTeam,
-  getSystemAnalytics,
-} = require('../controllers/adminController');
-const { protect, authorize } = require('../middleware/auth');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
-router.use(protect, authorize('admin'));
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: 6,
+      select: false,
+    },
+    role: {
+      type: String,
+      enum: ['employee', 'manager', 'admin'],
+      default: 'employee',
+    },
+    phone: { type: String, default: '' },
+    designation: { type: String, default: '' },
+    bio: { type: String, default: '' },
+    avatar: { type: String, default: '' },
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
+    },
+    team: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+    },
+    manager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+  },
+  { timestamps: true }
+);
 
-router.get('/analytics', getSystemAnalytics);
-router.route('/users').get(getAllUsers);
-router.route('/users/:id').put(updateUser).delete(deleteUser);
-router.route('/cycles').get(getCycles).post(createCycle);
-router.route('/cycles/:id').put(updateCycle).delete(deleteCycle);
-router.route('/departments').get(getDepartments).post(createDepartment);
-router.route('/departments/:id').put(updateDepartment).delete(deleteDepartment);
-router.route('/teams').get(getTeams).post(createTeam);
-router.route('/teams/:id').put(updateTeam).delete(deleteTeam);
+// Password hash karo save se pehle
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
-module.exports = router;
+// Password match karo
+UserSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Reset token generate karo
+UserSchema.methods.getResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  this.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
+  return resetToken;
+};
+
+module.exports = mongoose.model('User', UserSchema);
