@@ -3,28 +3,157 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-bg: #f8f9fc;
+    --color-surface: #ffffff;
+    --color-surface-2: #f0f2f8;
+    --color-border: #e5e8f2;
+    --color-text: #0e1021;
+    --color-text-muted: #6b7280;
+    --color-primary: #4f6ef7;
+    --color-primary-hover: #3a50ed;
+    --sidebar-width: 260px;
+  }
+
+  .dark {
+    --color-bg: #0e1021;
+    --color-surface: #14172a;
+    --color-surface-2: #1a1d2e;
+    --color-border: #252840;
+    --color-text: #f0f2f8;
+    --color-text-muted: #8b92a9;
+    --color-primary: #6b82fa;
+    --color-primary-hover: #4f6ef7;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
-    @apply bg-slate-950 text-slate-200 antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(79, 110, 247, 0.2);
+    color: var(--color-text);
   }
 }
 
-/* Custom Scrollbar for Dashboard Layout */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #020617;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+@layer components {
+  /* ─── Buttons ─────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] shadow-md hover:shadow-glow-primary;
+  }
+  .btn-secondary {
+    @apply btn bg-transparent border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-surface-2)] active:scale-[0.98];
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] active:scale-[0.98];
+  }
+  .btn-sm { @apply px-3 py-1.5 text-xs; }
+  .btn-md { @apply px-4 py-2.5; }
+  .btn-lg { @apply px-6 py-3 text-base; }
+
+  /* ─── Cards ───────────────────────────────────────── */
+  .card {
+    @apply bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-card-light dark:shadow-card-dark transition-all duration-200;
+  }
+  .card-hover {
+    @apply card hover:border-primary-400/40 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer;
+  }
+
+  /* ─── Inputs ──────────────────────────────────────── */
+  .input {
+    @apply w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-all duration-200 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20;
+  }
+  .label {
+    @apply block text-sm font-medium text-[var(--color-text)] mb-1.5;
+  }
+
+  /* ─── Badges ──────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-primary { @apply badge bg-primary-100 text-primary-700 dark:bg-slate-900 dark:text-primary-300; }
+  .badge-success { @apply badge bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400; }
+  .badge-warning { @apply badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400; }
+  .badge-danger  { @apply badge bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400; }
+  .badge-info    { @apply badge bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400; }
+  .badge-gray    { @apply badge bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300; }
+
+  /* ─── Scrollbar ────────────────────────────────────── */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
+
+  /* ─── Page wrapper ─────────────────────────────────── */
+  .page-wrapper {
+    @apply min-h-screen bg-[var(--color-bg)];
+  }
+
+  /* ─── Sidebar ──────────────────────────────────────── */
+  .sidebar {
+    @apply fixed left-0 top-0 h-full w-[260px] bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col z-40 transition-all duration-300;
+  }
+
+  /* ─── Stat card ─────────────────────────────────────── */
+  .stat-card {
+    @apply card p-6 flex items-start gap-4;
+  }
+
+  /* ─── Progress bar ──────────────────────────────────── */
+  .progress-track {
+    @apply w-full bg-[var(--color-surface-2)] rounded-full overflow-hidden;
+  }
+  .progress-bar {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+  }
 }
 
-/* Smooth Transitions for Buttons/Links */
-.transition-all {
-  transition-duration: 300ms;
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 bg-clip-text text-transparent;
+  }
+  .text-gradient-warm {
+    @apply bg-gradient-to-r from-accent-400 to-primary-500 bg-clip-text text-transparent;
+  }
+  .bg-glass {
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.7);
+  }
+  .dark .bg-glass {
+    background: rgba(20, 23, 42, 0.8);
+  }
+
+  /* Grid pattern background */
+  .bg-grid {
+    background-image: 
+      linear-gradient(rgba(79,110,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,110,247,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
 }

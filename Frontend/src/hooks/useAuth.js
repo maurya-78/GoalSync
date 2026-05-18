@@ -1,36 +1,22 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { executeLogin, logoutUser } from '../redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 
 export const useAuth = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, token, loading, error } = useSelector((state) => state.auth);
+  const { user, token, isAuthenticated, loading, error } = useSelector((s) => s.auth);
 
-  const login = async (credentials) => {
-    const result = await dispatch(executeLogin(credentials));
-    if (executeLogin.fulfilled.match(result)) {
-      navigate('/dashboard');
-      return { success: true };
-    }
-    return { success: false, error: result.payload };
-  };
-
-  const logout = () => {
-    dispatch(logoutUser());
+  const logout = async () => {
+    await dispatch(logoutUser());
+    toast.success('Logged out successfully');
     navigate('/login');
   };
 
-  return {
-    user,
-    token,
-    loading,
-    error,
-    isAuthenticated: !!token,
-    isAdmin: user?.role === 'Admin',
-    isManager: user?.role === 'Manager',
-    isEmployee: user?.role === 'Employee',
-    login,
-    logout
-  };
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isEmployee = user?.role === 'employee';
+
+  return { user, token, isAuthenticated, loading, error, logout, isAdmin, isManager, isEmployee };
 };

@@ -33,24 +33,14 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/goals', require('./routes/goalRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
-app.use('/api/notifications', require('./routes/notification'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/goals', require('./routes/goal'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // 404 handler
-app.use((req, res, next) => {
-
-    const error = new Error(
-
-        `Route not found - ${req.originalUrl}`
-
-    );
-
-    res.status(404);
-
-    next(error);
-
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
 
 // Error handler (must be last)

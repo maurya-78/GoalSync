@@ -17,15 +17,18 @@ const {
 // ==========================================
 
 const authRoutes =
-  require('./routes/authRoutes');
+  require('./routes/auth');
 const goalRoutes =
-  require('./routes/goalRoutes');
-const cycleRoutes =
-  require('./routes/cycleRoutes');
-const managementRoutes =
-  require('./routes/managementRoutes');
+  require('./routes/goal');
+// const cycleRoutes =
+//   require('./routes/cycleRoutes');
+// const managementRoutes =
+//   require('./routes/managementRoutes');
 const adminRoutes =
-  require('./routes/adminRoutes');
+  require('./routes/admin');
+const notificationRoutes =
+  require('./routes/notifications');
+
 
 // ==========================================
 // INITIALIZE EXPRESS

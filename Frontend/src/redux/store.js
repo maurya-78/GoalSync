@@ -1,19 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import goalReducer from './slices/goalSlice';
-import userReducer from './slices/userSlice';
+import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     goals: goalReducer,
-    users: userReducer,
+    ui: uiReducer,
   },
-  // Middleware for serializable checks (optional but recommended)
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }),
+    getDefaultMiddleware({ serializableCheck: false }),
 });
-
-export default store;

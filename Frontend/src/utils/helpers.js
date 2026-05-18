@@ -1,31 +1,50 @@
-import { format } from 'date-fns';
-
-/**
- * Goal weightage total calculate karne ke liye
- */
-export const calculateTotalWeightage = (goals = []) => {
-  return goals.reduce((acc, goal) => acc + (Number(goal.weightage) || 0), 0);
+export const getStatusBadge = (status) => {
+  const map = {
+    draft: 'badge-gray',
+    pending_approval: 'badge-warning',
+    approved: 'badge-primary',
+    in_progress: 'badge-info',
+    completed: 'badge-success',
+    rejected: 'badge-danger',
+  };
+  return map[status] || 'badge-gray';
 };
 
-/**
- * Enterprise Date Formatting (e.g., 14 May 2026)
- */
+export const getPriorityBadge = (priority) => {
+  const map = {
+    low: 'badge-gray',
+    medium: 'badge-primary',
+    high: 'badge-warning',
+    critical: 'badge-danger',
+  };
+  return map[priority] || 'badge-gray';
+};
+
+export const formatStatus = (status) =>
+  status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+export const getProgressColor = (progress) => {
+  if (progress >= 80) return 'from-emerald-500 to-emerald-400';
+  if (progress >= 50) return 'from-primary-500 to-primary-400';
+  if (progress >= 25) return 'from-amber-500 to-amber-400';
+  return 'from-red-500 to-red-400';
+};
+
+export const getInitials = (name = '') =>
+  name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
 export const formatDate = (date) => {
-  if (!date) return 'N/A';
-  return format(new Date(date), 'dd MMM yyyy');
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-/**
- * Text truncation for long goal descriptions
- */
-export const truncateText = (text, length = 100) => {
-  if (text?.length <= length) return text;
-  return text?.substring(0, length) + '...';
-};
-
-/**
- * Role-based link filter for Sidebar
- */
-export const filterRoutesByRole = (routes, userRole) => {
-  return routes.filter(route => route.roles.includes(userRole));
+export const roleColors = {
+  admin: 'badge-danger',
+  manager: 'badge-primary',
+  employee: 'badge-success',
 };
