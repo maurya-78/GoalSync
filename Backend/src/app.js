@@ -23,13 +23,23 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(cors({
-  origin: [
-    'https://goal-sync-ruby.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5173',
-  ],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'https://goal-sync-ruby.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ];
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
