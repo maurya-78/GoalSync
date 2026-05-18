@@ -53,11 +53,11 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Password hash karo save se pehle
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+UserSchema.pre('save', async function (done) {
+  if (!this.isModified('password')) return done();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
+  done();
 });
 
 // Password match karo
