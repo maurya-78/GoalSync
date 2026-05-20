@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// ─── GoalSheet ────────────────────────────────────────────────────────────────
+// ─── GoalSheet 
 const GoalSheetSchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -20,7 +20,7 @@ const GoalSheetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── Cycle ─────────────────────────────────────────────────────────────────
+// ─── Cycle
 const CycleSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -33,7 +33,7 @@ const CycleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── Team ──────────────────────────────────────────────────────────────────
+// ─── Team 
 const TeamSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -45,7 +45,7 @@ const TeamSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── Department ────────────────────────────────────────────────────────────
+// ─── Department 
 const DepartmentSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, unique: true },
@@ -55,7 +55,7 @@ const DepartmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── Notification ─────────────────────────────────────────────────────────
+// ─── Notification 
 const NotificationSchema = new mongoose.Schema(
   {
     recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

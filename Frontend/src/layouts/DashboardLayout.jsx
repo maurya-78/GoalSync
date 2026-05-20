@@ -24,11 +24,9 @@ const DashboardLayout = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const title = pageTitles[location.pathname] || 'GoalSync';
-
   useEffect(() => {
     dispatch(fetchMe());
   }, []);
-
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex">
       <Sidebar />

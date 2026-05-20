@@ -3,7 +3,7 @@ const { Notification } = require('../models/index');
 
 // @desc    Create goal
 // @route   POST /api/goals
-// @access  Private
+
 exports.createGoal = async (req, res, next) => {
   try {
     req.body.owner = req.user.id;
@@ -17,7 +17,7 @@ exports.createGoal = async (req, res, next) => {
 
 // @desc    Get goals (filtered by role)
 // @route   GET /api/goals
-// @access  Private
+
 exports.getGoals = async (req, res, next) => {
   try {
     let query = {};
@@ -33,7 +33,7 @@ exports.getGoals = async (req, res, next) => {
       memberIds.push(req.user.id);
       query.owner = { $in: memberIds };
     }
-    // Admin sees all
+    // Admin view
 
     if (status) query.status = status;
     if (priority) query.priority = priority;
@@ -53,7 +53,7 @@ exports.getGoals = async (req, res, next) => {
 
 // @desc    Get single goal
 // @route   GET /api/goals/:id
-// @access  Private
+
 exports.getGoal = async (req, res, next) => {
   try {
     const goal = await Goal.findById(req.params.id)
@@ -64,7 +64,7 @@ exports.getGoal = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Goal not found' });
     }
 
-    // Auth check
+    // Auth 
     if (req.user.role === 'employee' && goal.owner._id.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
@@ -77,7 +77,7 @@ exports.getGoal = async (req, res, next) => {
 
 // @desc    Update goal
 // @route   PUT /api/goals/:id
-// @access  Private
+
 exports.updateGoal = async (req, res, next) => {
   try {
     let goal = await Goal.findById(req.params.id);
@@ -103,7 +103,7 @@ exports.updateGoal = async (req, res, next) => {
 
 // @desc    Delete goal
 // @route   DELETE /api/goals/:id
-// @access  Private
+
 exports.deleteGoal = async (req, res, next) => {
   try {
     const goal = await Goal.findById(req.params.id);
@@ -122,7 +122,7 @@ exports.deleteGoal = async (req, res, next) => {
 
 // @desc    Approve or reject goal (manager/admin)
 // @route   PUT /api/goals/:id/review
-// @access  Private (manager, admin)
+
 exports.reviewGoal = async (req, res, next) => {
   try {
     const { status, feedback } = req.body;
@@ -134,7 +134,7 @@ exports.reviewGoal = async (req, res, next) => {
 
     if (!goal) return res.status(404).json({ success: false, message: 'Goal not found' });
 
-    // Create notification
+    // notification
     await Notification.create({
       recipient: goal.owner._id,
       sender: req.user.id,
@@ -151,7 +151,7 @@ exports.reviewGoal = async (req, res, next) => {
 
 // @desc    Get goal analytics
 // @route   GET /api/goals/analytics
-// @access  Private
+
 exports.getAnalytics = async (req, res, next) => {
   try {
     let matchQuery = {};

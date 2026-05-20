@@ -1,8 +1,7 @@
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
-
-  // Mongoose bad ObjectId
+//mongoose bad request
   if (err.name === 'CastError') {
     error.message = 'Resource not found';
     return res.status(404).json({ success: false, message: error.message });
@@ -14,7 +13,6 @@ const errorHandler = (err, req, res, next) => {
     error.message = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
     return res.status(400).json({ success: false, message: error.message });
   }
-
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map((e) => e.message);

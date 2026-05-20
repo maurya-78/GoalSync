@@ -3,7 +3,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const morgan = require('morgan');
-
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Route Imports
@@ -11,8 +10,8 @@ const authRoutes = require('./routes/auth');
 const goalRoutes = require('./routes/goal');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
-// const cycleRoutes = require('./routes/cycles');        // jab file bane tab uncomment
-// const managementRoutes = require('./routes/management'); // jab file bane tab uncomment
+// const cycleRoutes = require('./routes/cycles');        
+// const managementRoutes = require('./routes/management'); 
 
 const app = express();
 
@@ -70,8 +69,8 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/goals', goalRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
-// app.use('/api/v1/cycles', cycleRoutes);           // baad me
-// app.use('/api/v1/management', managementRoutes);  // baad me
+// app.use('/api/v1/cycles', cycleRoutes);           
+// app.use('/api/v1/management', managementRoutes);  
 
 app.use(notFound);
 app.use(errorHandler);

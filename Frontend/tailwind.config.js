@@ -13,11 +13,7 @@ export default {
   theme: {
 
     extend: {
-
-      // ==========================================
-      // COLORS
-      // ==========================================
-
+      //color
       colors: {
 
         primary: {
@@ -57,10 +53,7 @@ export default {
 
       },
 
-      // ==========================================
-      // FONTS
-      // ==========================================
-
+//font
       fontFamily: {
 
         mono: ['JetBrains Mono', 'monospace'],
@@ -69,10 +62,7 @@ export default {
 
       },
 
-      // ==========================================
-      // SHADOWS
-      // ==========================================
-
+//shadow
       boxShadow: {
 
         // Existing glow shadow

@@ -5,7 +5,6 @@ const sendTokenResponse = require('../utils/sendTokenResponse');
 
 // @desc    Register user
 // @route   POST /api/auth/register
-// @access  Public
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
@@ -22,7 +21,6 @@ exports.register = async (req, res, next) => {
 
 // @desc    Login user
 // @route   POST /api/auth/login
-// @access  Public
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -47,7 +45,7 @@ exports.login = async (req, res, next) => {
 
 // @desc    Logout user
 // @route   GET /api/auth/logout
-// @access  Private
+
 exports.logout = async (req, res, next) => {
   res.cookie('token', 'none', { expires: new Date(Date.now() + 5 * 1000), httpOnly: true });
   res.status(200).json({ success: true, message: 'Logged out successfully' });
@@ -55,7 +53,7 @@ exports.logout = async (req, res, next) => {
 
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
-// @access  Private
+
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
@@ -70,7 +68,7 @@ exports.getMe = async (req, res, next) => {
 
 // @desc    Update profile
 // @route   PUT /api/auth/profile
-// @access  Private
+
 exports.updateProfile = async (req, res, next) => {
   try {
     const allowedFields = ['name', 'phone', 'designation', 'bio', 'avatar'];
@@ -90,7 +88,7 @@ exports.updateProfile = async (req, res, next) => {
 
 // @desc    Change password
 // @route   PUT /api/auth/change-password
-// @access  Private
+
 exports.changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -108,7 +106,7 @@ exports.changePassword = async (req, res, next) => {
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
-// @access  Public
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -145,7 +143,7 @@ exports.forgotPassword = async (req, res, next) => {
 
 // @desc    Reset password
 // @route   PUT /api/auth/reset-password/:resetToken
-// @access  Public
+
 exports.resetPassword = async (req, res, next) => {
   try {
     const resetPasswordToken = crypto

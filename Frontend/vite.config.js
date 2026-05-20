@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    open: true, // Auto-open browser on start
+    open: true, 
   },
   build: {
     outDir: 'dist',

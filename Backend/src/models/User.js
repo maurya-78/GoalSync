@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-
 const UserSchema = new mongoose.Schema(
   {
     name: {
@@ -52,19 +51,19 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Password hash karo save se pehle
+// Password hashing
 UserSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Password match karo
+// Password matching
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Reset token generate karo
+// Reset token generate 
 UserSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString('hex');
   this.resetPasswordToken = crypto
@@ -75,7 +74,7 @@ UserSchema.methods.getResetPasswordToken = function () {
   return resetToken;
 };
 
-// JWT token generate karo
+// JWT token generate
 UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign(
     { id: this._id, role: this.role },

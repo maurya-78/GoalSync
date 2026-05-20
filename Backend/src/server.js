@@ -76,7 +76,7 @@ app.use((req, res) => {
   });
 });
 
-// Error handler (must be last)
+// Error handler 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

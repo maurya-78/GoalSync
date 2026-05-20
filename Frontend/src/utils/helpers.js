@@ -9,7 +9,6 @@ export const getStatusBadge = (status) => {
   };
   return map[status] || 'badge-gray';
 };
-
 export const getPriorityBadge = (priority) => {
   const map = {
     low: 'badge-gray',
@@ -19,7 +18,6 @@ export const getPriorityBadge = (priority) => {
   };
   return map[priority] || 'badge-gray';
 };
-
 export const formatStatus = (status) =>
   status?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 

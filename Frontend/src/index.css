@@ -54,7 +54,7 @@
 }
 
 @layer components {
-  /* ─── Buttons ─────────────────────────────────────── */
+  /* ─── Buttons  */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none;
   }
@@ -74,7 +74,7 @@
   .btn-md { @apply px-4 py-2.5; }
   .btn-lg { @apply px-6 py-3 text-base; }
 
-  /* ─── Cards ───────────────────────────────────────── */
+  /* ─── Cards  */
   .card {
     @apply bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-card-light dark:shadow-card-dark transition-all duration-200;
   }
@@ -82,7 +82,7 @@
     @apply card hover:border-primary-400/40 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer;
   }
 
-  /* ─── Inputs ──────────────────────────────────────── */
+  /* ─── Inputs  */
   .input {
     @apply w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-all duration-200 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20;
   }
@@ -90,7 +90,7 @@
     @apply block text-sm font-medium text-[var(--color-text)] mb-1.5;
   }
 
-  /* ─── Badges ──────────────────────────────────────── */
+  /* ─── Badges */
   .badge {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
@@ -101,7 +101,7 @@
   .badge-info    { @apply badge bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400; }
   .badge-gray    { @apply badge bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300; }
 
-  /* ─── Scrollbar ────────────────────────────────────── */
+  /* ─── Scrollbar  */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
@@ -110,22 +110,22 @@
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
 
-  /* ─── Page wrapper ─────────────────────────────────── */
+  /* ─── Page wrapper  */
   .page-wrapper {
     @apply min-h-screen bg-[var(--color-bg)];
   }
 
-  /* ─── Sidebar ──────────────────────────────────────── */
+  /* ─── Sidebar */
   .sidebar {
     @apply fixed left-0 top-0 h-full w-[260px] bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col z-40 transition-all duration-300;
   }
 
-  /* ─── Stat card ─────────────────────────────────────── */
+  /* ─── Stat card */
   .stat-card {
     @apply card p-6 flex items-start gap-4;
   }
 
-  /* ─── Progress bar ──────────────────────────────────── */
+  /* ─── Progress bar */
   .progress-track {
     @apply w-full bg-[var(--color-surface-2)] rounded-full overflow-hidden;
   }

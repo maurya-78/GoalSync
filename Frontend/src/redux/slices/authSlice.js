@@ -7,7 +7,7 @@ const persistedUser = (() => {
 })();
 const persistedToken = localStorage.getItem('gs_token');
 
-// ─── Thunks ────────────────────────────────────────────────────────────────
+// ─── Thunks 
 export const registerUser = createAsyncThunk('auth/register', async (data, { rejectWithValue }) => {
   try {
     const res = await authService.register(data);
@@ -57,7 +57,7 @@ export const changePassword = createAsyncThunk('auth/changePassword', async (dat
   }
 });
 
-// ─── Slice ─────────────────────────────────────────────────────────────────
+// ─── Slice 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {

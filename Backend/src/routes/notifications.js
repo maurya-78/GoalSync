@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { Notification } = require('../models/index');
 const { protect } = require('../middleware/auth');
-
 router.use(protect);
 
 // Get all notifications for current user
