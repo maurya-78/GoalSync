@@ -18,7 +18,6 @@ https://goal-sync-ruby.vercel.app
 📦 **GitHub Repository**  
 https://github.com/maurya-78/GoalSync
 
-
 ---
 
 ### 💡 “Transforming Goals into Achievements with Smart Collaboration”
@@ -187,7 +186,6 @@ Frontend runs on:
 ```bash
 http://localhost:3000
 ```
-
 ---
 
 # ⚙️ Backend Setup
@@ -205,7 +203,6 @@ Backend runs on:
 ```bash
 http://localhost:5000
 ```
-
 ---
 
 # 🔌 Environment Variables
